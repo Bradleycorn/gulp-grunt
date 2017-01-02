@@ -30,9 +30,18 @@ function findDependencies(task, deps, prefix) {
     for (var taskName in deps) {
       if (deps.hasOwnProperty(taskName)) {
         if (prefix+taskName == task) {
-          return deps[taskName];
+          var result = deps[taskName];
+
+          if (Array.isArray(result)) {
+            return result;
+          } else {
+            var arr = [];
+            arr.push(result);
+            return arr;
+          }
+
         }
-      }
+      } 
     }
   }
 
@@ -47,7 +56,11 @@ module.exports = function (gulp, options) {
     if (tasks.hasOwnProperty(name)) {
       var fn = tasks[name];
       var dependencies = findDependencies(name, opt.deps, opt.prefix);
-      gulp.task(name, fn);
+      if (dependencies != null) {
+        gulp.task(name,dependencies,fn);
+      } else {
+        gulp.task(name, fn);
+      }
     }
   }
 
@@ -96,8 +109,8 @@ var getTasks = module.exports.tasks = function (opt) {
           grunt.log.ok('[grunt-gulp] Done running Grunt "' + name + '" task.');
         }
         if (code != 0) {
-    	     grunt.fail.warn('[grunt-gulp] Failed running Grunt "' + name + '" task.')
-    	  }
+           grunt.fail.warn('[grunt-gulp] Failed running Grunt "' + name + '" task.')
+        }
         cb();
       });
     };
