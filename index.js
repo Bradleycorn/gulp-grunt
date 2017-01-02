@@ -15,7 +15,7 @@ var makeOptions = function (options) {
   if (options) {
     for (var key in options) {
       baseOptions[key] = options[key];
-      if(key != 'base' && key != 'prefix'){
+      if(key != 'base' && key != 'prefix' && key != 'deps'){
         grunt.option(key, options[key]);
       }
     }
@@ -24,20 +24,36 @@ var makeOptions = function (options) {
   return baseOptions;
 };
 
+
+function findDependencies(task, deps, prefix) {
+  if (deps) {
+    for (var taskName in deps) {
+      if (deps.hasOwnProperty(taskName)) {
+        if (prefix+taskName == task) {
+          return deps[taskName];
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 module.exports = function (gulp, options) {
-  var tasks = getTasks(options);
+  var opt = makeOptions(options);
+  var tasks = getTasks(opt);
 
   for (var name in tasks) {
     if (tasks.hasOwnProperty(name)) {
       var fn = tasks[name];
+      var dependencies = findDependencies(name, opt.deps, opt.prefix);
       gulp.task(name, fn);
     }
   }
 
 };
 
-var getTasks = module.exports.tasks = function (options) {
-  var opt = makeOptions(options);
+var getTasks = module.exports.tasks = function (opt) {
 
   var oldCwd = process.cwd();
   var cwd = opt.base != null ? opt.base : oldCwd;
